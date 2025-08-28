@@ -297,6 +297,17 @@
       margin-bottom: 5px;
     }
 
+    .trip-chart-container {
+      width: 100%;
+      height: 150px;
+      position: relative;
+    }
+
+    .trip-chart-container canvas {
+      width: 100% !important;
+      height: 100% !important;
+    }
+
     /* Summary Table Container */
     .summary-table-container {
       background: var(--card-background);
@@ -534,10 +545,26 @@
             </div>
           </div>
 
+          <!-- Viajes Realizados con gráfica -->
+          <div class="card">
+            <div class="card-header">
+              <h3>Viajes Realizados</h3>
+              <div class="info-icons">
+                <i class="material-icons">directions_bus</i>
+                <i class="material-icons info-icon" title="Frecuencia de viajes a la universidad">info</i>
+              </div>
+            </div>
+            <div class="card-content">
+              <div class="trip-chart-container">
+                <canvas id="tripChart"></canvas>
+              </div>
+            </div>
+          </div>
+
           <!-- Nuevo item debajo de Huella Total -->
           <div class="card">
             <div class="card-header">
-              <h3>Consumo Energético</h3>
+              <h3>Disponible</h3>
               <div class="info-icons">
                 <i class="material-icons">bolt</i>
                 <i class="material-icons chart-icon" data-chart="consumo-energetico" title="Ver gráfica">insert_chart</i>
@@ -550,26 +577,11 @@
             </div>
           </div>
 
-          <!-- Nuevo item debajo de Vehículos -->
-          <div class="card">
-            <div class="card-header">
-              <h3>Viajes Realizados</h3>
-              <div class="info-icons">
-                <i class="material-icons">flight_takeoff</i>
-                <i class="material-icons chart-icon" data-chart="viajes-realizados" title="Ver gráfica">insert_chart</i>
-                <i class="material-icons info-icon" title="Cantidad de viajes realizados">info</i>
-              </div>
-            </div>
-            <div class="card-content">
-              <h2 id="tripsDone">0</h2>
-              <p>Viajes/Mes</p>
-            </div>
-          </div>
 
           <!-- Nuevo item debajo de Distancia -->
           <div class="card">
             <div class="card-header">
-              <h3>Tiempo en Movimiento</h3>
+              <h3>Disponible</h3>
               <div class="info-icons">
                 <i class="material-icons">timer</i>
                 <i class="material-icons chart-icon" data-chart="tiempo-movimiento" title="Ver gráfica">insert_chart</i>
@@ -1093,6 +1105,67 @@
       }
 
       // Actualización del dashboard con los datos
+      let tripChart = null;
+
+      function updateTripChart(data) {
+        if (!data || data.length === 0) return;
+
+        // Contar la frecuencia de cada respuesta
+        const frecuencias = {};
+        data.forEach(item => {
+          const viajes = item['¿Cuantos recorrido realiza usted desde su casa hasta la universidad?'] || 'No especificado';
+          frecuencias[viajes] = (frecuencias[viajes] || 0) + 1;
+        });
+
+        // Preparar datos para el gráfico
+        const labels = Object.keys(frecuencias);
+        const values = Object.values(frecuencias);
+
+        // Destruir el gráfico anterior si existe
+        if (tripChart) {
+          tripChart.destroy();
+        }
+
+        // Crear el nuevo gráfico
+        const ctx = document.getElementById('tripChart').getContext('2d');
+        tripChart = new Chart(ctx, {
+          type: 'bar',
+          data: {
+            labels: labels,
+            datasets: [{
+              label: 'Número de estudiantes',
+              data: values,
+              backgroundColor: 'rgba(46, 204, 113, 0.8)',
+              borderColor: 'rgba(39, 174, 96, 1)',
+              borderWidth: 1
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: {
+                display: false
+              }
+            },
+            scales: {
+              y: {
+                beginAtZero: true,
+                ticks: {
+                  stepSize: 1
+                }
+              },
+              x: {
+                ticks: {
+                  maxRotation: 45,
+                  minRotation: 45
+                }
+              }
+            }
+          }
+        });
+      }
+
       function updateDashboard(data) {
         // Procesar datos del Excel
         const processedData = procesarDatosExcel(data);
@@ -1101,6 +1174,7 @@
         updateTotalFootprint(processedData);
         updateVehicleStats(processedData);
         updateEnvironmentalAwareness(processedData);
+        updateTripChart(data);
 
         // Actualizar tabla del dashboard
         updateDashboardTable(processedData);
@@ -1117,29 +1191,44 @@
           return;
         }
 
-        data.forEach((vehicle) => {
+        // Ordenar los datos para mostrar primero los vehículos normales
+        const sortedData = [...data].sort((a, b) => {
+          const aExcluido = a.kilometrosMes > 1000;
+          const bExcluido = b.kilometrosMes > 1000;
+          return aExcluido - bExcluido;
+        });
+
+        sortedData.forEach((vehicle) => {
           const row = document.createElement("tr");
+          const excedeLimite = vehicle.kilometrosMes > 1000;
+          
           row.innerHTML = `
             <td>${vehicle.marca || ""}</td>
             <td>${vehicle.tipoVehiculo || ""}</td>
             <td>${vehicle.tipoCombustible || ""}</td>
-            <td>${vehicle.kilometrosMes} km</td>
+            <td>${vehicle.kilometrosMes} km ${excedeLimite ? '(>1000 km)' : ''}</td>
             <td>${vehicle.huellaCarbono.toFixed(2)} kg CO₂</td>
-        `;
+          `;
           tableBody.appendChild(row);
         });
       }
 
       function updateVehicleStats(data) {
+        // Separar vehículos normales y excluidos
+        const vehiculosNormales = data.filter(v => v.kilometrosMes <= 1000 && v.kilometrosMes > 0);
+        const vehiculosExcluidos = data.filter(v => v.kilometrosMes > 1000);
+        
+        // Mostrar total de vehículos (incluye todos)
         const totalVehiculos = data.length;
         
-        // Calcular el promedio de kilómetros
-        const totalKilometros = data.reduce(
+        // Calcular el promedio de kilómetros solo con vehículos normales
+        const totalKilometros = vehiculosNormales.reduce(
           (sum, vehicle) => sum + vehicle.kilometrosMes,
           0
         );
-        const promedioKilometros = totalVehiculos > 0 ? totalKilometros / totalVehiculos : 0;
+        const promedioKilometros = vehiculosNormales.length > 0 ? totalKilometros / vehiculosNormales.length : 0;
         
+        // Calcular totales incluyendo todos los vehículos
         const totalLitros = data.reduce(
           (sum, vehicle) => sum + vehicle.litrosMes,
           0
@@ -1242,13 +1331,17 @@
         // Obtener el consumo promedio según el tipo de vehículo
         const consumoKmL = CONSUMO_PROMEDIO[vehiculo["Tipo de Vehiculo"]] || 10;
 
-        // Calcular litros consumidos por mes
         // Extraer solo el número de la respuesta de kilómetros
         const kmText =
           vehiculo[
             "¿Cuántos km recorre por mes? (Ingresen un solo valor por ejemplo 100km)"
           ] || "0";
         const kilometrosMes = parseFloat(kmText.replace(/[^0-9.]/g, "")) || 0;
+        
+        // Verificar si excede el límite de 1000km
+        const excedeLimit = kilometrosMes > 1000;
+        
+        // Calcular consumo y emisiones
         const litrosMes = kilometrosMes / consumoKmL;
 
         // Calcular emisiones según el tipo de combustible
