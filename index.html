@@ -1,0 +1,1533 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dashboard Huella de Carbono</title>
+    <link
+      href="https://fonts.googleapis.com/icon?family=Material+Icons"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  </head>
+  <style>
+    :root {
+      --primary-color: #2ecc71;
+      --secondary-color: #27ae60;
+      --background-color: #f5f6fa;
+      --text-color: #2c3e50;
+      --card-background: #ffffff;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body {
+      background-color: var(--background-color);
+      color: var(--text-color);
+    }
+
+    .container {
+      min-height: 100vh;
+    }
+
+    /* Main Content Styles */
+    .main-content {
+      padding: 20px;
+    }
+
+    .top-bar {
+      background: var(--card-background);
+      padding: 16px 32px;
+      margin-bottom: 30px;
+      border-radius: 12px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .project-title {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-right: auto;
+    }
+
+    .project-title h1 {
+      color: var(--text-color);
+      font-size: 1.8rem;
+      font-weight: 600;
+      margin: 0;
+      background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .options-menu {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .menu-option {
+      padding: 8px 16px;
+      border: none;
+      border-radius: 8px;
+      background: transparent;
+      color: var(--text-color);
+      font-size: 0.95rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      position: relative;
+      white-space: nowrap;
+    }
+
+    .menu-option i {
+      font-size: 20px;
+      opacity: 0.8;
+    }
+
+    .menu-option:hover {
+      color: var(--primary-color);
+    }
+
+    .menu-option.active {
+      color: var(--primary-color);
+      font-weight: 600;
+    }
+
+    .menu-option.active::after {
+      content: '';
+      position: absolute;
+      bottom: -2px;
+      left: 16px;
+      right: 16px;
+      height: 2px;
+      background: var(--primary-color);
+      border-radius: 2px;
+    }
+
+    .project-title {
+      text-align: center;
+    }
+
+    .project-title h1 {
+      color: var(--primary-color);
+      font-size: 2rem;
+      font-weight: bold;
+    }
+
+    /* Options Menu Styles */
+    .options-menu {
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+    }
+
+    .menu-option {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 8px;
+      background: transparent;
+      color: var(--text-color);
+      font-size: 1.1rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .menu-option:hover {
+      color: var(--primary-color);
+    }
+
+    .menu-option.active {
+      color: var(--text-color);
+    }
+
+    /* Section Styles */
+    .section {
+      display: block;
+    }
+
+    .section.hidden {
+      display: none;
+    }
+
+    /* Search Section Styles */
+    .search-section {
+      background: var(--card-background);
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    }
+
+    .search-container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .search-box {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .search-box input,
+    .search-box select {
+      flex: 1;
+      padding: 12px;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      font-size: 1rem;
+      transition: border-color 0.3s ease;
+    }
+
+    .search-box input:focus,
+    .search-box select:focus {
+      border-color: var(--primary-color);
+      outline: none;
+    }
+
+    .search-box select {
+      background-color: white;
+      cursor: pointer;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      appearance: none;
+      background-image: url("data:image/svg+xml;utf8,<svg fill='%232ecc71' height='24' viewBox='0 0 24 24' width='24' xmlns='http://www.w3.org/2000/svg'><path d='M7 10l5 5 5-5z'/></svg>");
+      background-repeat: no-repeat;
+      background-position: right 8px center;
+      padding-right: 30px;
+    }
+
+    .search-button {
+      background: var(--primary-color);
+      border: none;
+      border-radius: 8px;
+      padding: 0 20px;
+      color: white;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    .search-button:hover {
+      background: var(--secondary-color);
+    }
+
+    /* Table Styles */
+    .vehicles-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+
+    .vehicles-table th,
+    .vehicles-table td {
+      padding: 12px;
+      text-align: left;
+      border-bottom: 1px solid #e0e0e0;
+    }
+
+    .vehicles-table th {
+      background-color: #f8f9fa;
+      font-weight: 600;
+      color: var(--text-color);
+    }
+
+    .vehicles-table tbody tr:hover {
+      background-color: #f5f5f5;
+    }
+
+    /* Dashboard Grid */
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 20px;
+    }
+
+    /* Card Styles */
+    .card {
+      background: var(--card-background);
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+    }
+
+    .info-icons {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .card-header i {
+      color: var(--primary-color);
+      font-size: 24px;
+    }
+
+    .info-icon {
+      font-size: 20px !important;
+      cursor: help;
+      opacity: 0.7;
+      transition: opacity 0.3s ease;
+    }
+
+    .info-icon:hover {
+      opacity: 1;
+    }
+
+    .card-content h2 {
+      font-size: 2rem;
+      color: var(--primary-color);
+      margin-bottom: 5px;
+    }
+
+    /* Summary Table Container */
+    .summary-table-container {
+      background: var(--card-background);
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+      grid-column: 1 / -1;
+      margin-bottom: 20px;
+      overflow-x: auto;
+      width: 100%;
+    }
+
+    .summary-table-container h3 {
+      margin-bottom: 15px;
+      color: var(--text-color);
+    }
+
+    /* Modal Styles */
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.5);
+      animation: fadeIn 0.3s ease;
+    }
+
+    .modal-content {
+      position: relative;
+      background-color: var(--card-background);
+      margin: 15% auto;
+      padding: 20px;
+      border-radius: 12px;
+      width: 80%;
+      max-width: 500px;
+      animation: slideIn 0.3s ease;
+    }
+
+    .close-modal {
+      position: absolute;
+      right: 20px;
+      top: 15px;
+      font-size: 24px;
+      cursor: pointer;
+      color: var(--text-color);
+    }
+
+    .close-modal:hover {
+      color: var(--primary-color);
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+      }
+      to {
+        opacity: 1;
+      }
+    }
+
+    @keyframes slideIn {
+      from {
+        transform: translateY(-20px);
+        opacity: 0;
+      }
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+
+    /* Responsive Design */
+    @media screen and (max-width: 768px) {
+      .container {
+        width: 100%;
+      }
+
+      .top-bar {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        padding: 15px;
+      }
+
+      .project-title {
+        margin-right: 0;
+        margin-bottom: 15px;
+      }
+
+      .project-title h1 {
+        font-size: 1.5rem;
+      }
+
+      .options-menu {
+        width: 100%;
+        justify-content: center;
+      }
+
+      .search-box {
+        flex-direction: column;
+        width: 100%;
+      }
+
+      .search-box input,
+      .search-box select,
+      .search-box button {
+        width: 100%;
+        margin: 5px 0;
+        height: 50px;
+      }
+
+      .search-results {
+        overflow-x: auto;
+        width: 100%;
+      }
+
+      .search-results .vehicles-table {
+        min-width: 800px;
+      }
+
+      .dashboard-grid {
+        grid-template-columns: 1fr;
+        padding: 10px;
+      }
+
+      .card {
+        width: 100%;
+        margin: 0 0 15px 0;
+      }
+
+      .summary-table-container,
+      .data-upload {
+        grid-column: span 1;
+      }
+
+      .vehicles-table {
+        font-size: 0.9rem;
+      }
+
+      .project-title h1 {
+        font-size: 1.5rem;
+      }
+
+      .main-content {
+        padding: 10px;
+      }
+
+      .top-bar {
+        padding: 15px;
+        margin-bottom: 20px;
+      }
+    }
+
+    #modalTitle {
+      margin-bottom: 10px;
+    }
+
+  </style>
+  <body>
+    <div class="container">
+      <!-- Main Content -->
+      <main class="main-content">
+        <header class="top-bar">
+          <div class="project-title">
+            <h1>Huella de Carbono</h1>
+          </div>
+          <nav class="options-menu">
+            <button class="menu-option active" data-section="dashboard">
+              Dashboard
+            </button>
+            <button class="menu-option" data-section="search">Búsqueda</button>
+          </nav>
+        </header>
+
+        <!-- Dashboard Section -->
+        <div class="dashboard-grid section" id="dashboard-section">
+          <!-- Cards resumen -->
+          <div class="card">
+            <div class="card-header">
+              <h3>Huella Total</h3>
+              <div class="info-icons">
+                <i class="material-icons">eco</i>
+                <i class="material-icons chart-icon" data-chart="huella-total" title="Ver gráfica">insert_chart</i>
+                <i
+                  class="material-icons info-icon"
+                  title="Total de emisiones de CO₂ generadas por todos los vehículos"
+                  >info</i
+                >
+              </div>
+            </div>
+            <div class="card-content">
+              <h2 id="totalFootprint">0</h2>
+              <p>Kilogramos CO₂</p>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <h3>Kilometros Recorridos</h3>
+              <div class="info-icons">
+                <i class="material-icons">route</i>
+                <i class="material-icons chart-icon" data-chart="distancia" title="Ver gráfica">insert_chart</i>
+                <i
+                  class="material-icons info-icon"
+                  title="Distancia total recorrida por mes por todos los vehículos"
+                  >info</i
+                >
+              </div>
+            </div>
+            <div class="card-content">
+              <h2 id="sources">0</h2>
+              <p>Km/Mes</p>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <h3>Vehículos</h3>
+              <div class="info-icons">
+                <i class="material-icons">directions_car</i>
+                <i class="material-icons chart-icon" data-chart="vehiculos" title="Ver gráfica">insert_chart</i>
+                <i
+                  class="material-icons info-icon"
+                  title="Número total de vehículos registrados"
+                  >info</i
+                >
+              </div>
+            </div>
+            <div class="card-content">
+              <h2 id="reduction">0</h2>
+              <p>Carros/Moto/Buses</p>
+            </div>
+          </div>
+
+          <!-- Nuevo item debajo de Huella Total -->
+          <div class="card">
+            <div class="card-header">
+              <h3>Consumo Energético</h3>
+              <div class="info-icons">
+                <i class="material-icons">bolt</i>
+                <i class="material-icons chart-icon" data-chart="consumo-energetico" title="Ver gráfica">insert_chart</i>
+                <i class="material-icons info-icon" title="Consumo energético total">info</i>
+              </div>
+            </div>
+            <div class="card-content">
+              <h2 id="energyConsumption">0</h2>
+              <p>kWh/Mes</p>
+            </div>
+          </div>
+
+          <!-- Nuevo item debajo de Vehículos -->
+          <div class="card">
+            <div class="card-header">
+              <h3>Viajes Realizados</h3>
+              <div class="info-icons">
+                <i class="material-icons">flight_takeoff</i>
+                <i class="material-icons chart-icon" data-chart="viajes-realizados" title="Ver gráfica">insert_chart</i>
+                <i class="material-icons info-icon" title="Cantidad de viajes realizados">info</i>
+              </div>
+            </div>
+            <div class="card-content">
+              <h2 id="tripsDone">0</h2>
+              <p>Viajes/Mes</p>
+            </div>
+          </div>
+
+          <!-- Nuevo item debajo de Distancia -->
+          <div class="card">
+            <div class="card-header">
+              <h3>Tiempo en Movimiento</h3>
+              <div class="info-icons">
+                <i class="material-icons">timer</i>
+                <i class="material-icons chart-icon" data-chart="tiempo-movimiento" title="Ver gráfica">insert_chart</i>
+                <i class="material-icons info-icon" title="Tiempo total en movimiento">info</i>
+              </div>
+            </div>
+            <div class="card-content">
+              <h2 id="movingTime">0</h2>
+              <p>Horas/Mes</p>
+            </div>
+          </div>
+
+          <!-- Área para mostrar la gráfica -->
+          <div id="dashboardChartContainer" style="display:none; grid-column: 1 / -1; margin-bottom: 20px; background: var(--card-background); border-radius: 12px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); padding: 20px; animation: fadeInChart 0.4s;">
+              <div id="dashboardChartTitle" style="font-size:1.3rem; font-weight:bold; color:var(--primary-color); margin-bottom:16px;"></div>
+              <div style="width:100%;height:350px;">
+                <canvas id="dashboardChart" style="width:100%;height:100%;max-width:100%;max-height:100%;"></canvas>
+              </div>
+          </div>
+    <style>
+      @keyframes fadeInChart {
+        from { opacity: 0; transform: scale(0.95); }
+        to { opacity: 1; transform: scale(1); }
+      }
+        @keyframes pressIcon {
+          0% { transform: scale(1); }
+          50% { transform: scale(0.85); }
+          100% { transform: scale(1); }
+        }
+        .chart-icon.pressed {
+          animation: pressIcon 0.25s;
+        }
+      .modal-content.animated {
+        animation: fadeInModal 0.4s;
+      }
+      @keyframes fadeInModal {
+        from { opacity: 0; transform: scale(0.95); }
+        to { opacity: 1; transform: scale(1); }
+      }
+    </style>
+          <!-- Tabla de Resumen -->
+          <div class="summary-table-container">
+            <h3>Resumen de Vehículos</h3>
+            <table id="dashboardTable" class="vehicles-table">
+              <thead>
+                <tr>
+                  <th>Marca</th>
+                  <th>Tipo de Vehículo</th>
+                  <th>Combustible</th>
+                  <th>Km/Mes</th>
+                  <th>Huella de CO₂</th>
+                </tr>
+              </thead>
+              <tbody id="dashboardTableBody">
+                <!-- Los datos se cargarán dinámicamente -->
+              </tbody>
+            </table>
+          </div>
+
+        </div>
+
+        <!-- Search Section -->
+        <div class="search-section section hidden" id="search-section">
+          <div class="search-container">
+            <div class="search-box">
+              <input
+                type="text"
+                id="vehicleSearch"
+                placeholder="Buscar vehículo..."
+              />
+              <button class="search-button">
+                <i class="material-icons">search</i>
+              </button>
+            </div>
+
+            <div class="search-results">
+              <table id="vehiclesTable" class="vehicles-table">
+                <thead>
+                  <tr>
+                    <th>Marca</th>
+                    <th>Tipo de Vehículo</th>
+                    <th>Combustible</th>
+                    <th>Km/Mes</th>
+                    <th>Huella de CO₂</th>
+                  </tr>
+                </thead>
+                <tbody id="vehiclesTableBody">
+                  <!-- Los resultados se cargarán dinámicamente -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <!-- Modal de Información -->
+    <div id="infoModal" class="modal">
+      <div class="modal-content">
+        <span class="close-modal">&times;</span>
+        <h2 id="modalTitle">Información</h2>
+        <p id="modalContent"></p>
+      </div>
+    </div>
+
+    <script src="https://apis.google.com/js/api.js"></script>
+    <script src="https://apis.google.com/js/platform.js"></script>
+    <script async defer>
+      let dashboardChart = null;
+      // ID de tu hoja de Google Sheets
+      const SPREADSHEET_ID = '1Wb74vcPY8VoAYk9P8-sbuTGS0nw-jsKo1wSyuV0HMXM';
+      const API_KEY = 'AIzaSyDR2tnIaFYa1IyDSEvDqJUJrDw9_IE5bqU'; // Reemplaza esto con la API Key que generaste
+      
+      // Función para cargar la API de Google Sheets
+      function loadGoogleSheetsAPI() {
+        // Verificar si ya se está cargando la API
+        if (window.gapiLoadStarted) return;
+        window.gapiLoadStarted = true;
+
+        // Manejar errores de carga
+        window.handleGapiError = function() {
+          console.error('Error al cargar GAPI. Reintentando...');
+          window.gapiLoadStarted = false;
+          setTimeout(loadGoogleSheetsAPI, 3000); // Reintentar después de 3 segundos
+        };
+
+        // Agregar manejador de errores al script
+        const gapiScript = document.querySelector('script[src*="apis.google.com/js/api.js"]');
+        if (gapiScript) {
+          gapiScript.onerror = window.handleGapiError;
+        }
+
+        // Intentar cargar el cliente
+        if (window.gapi) {
+          gapi.load('client', {
+            callback: initGoogleSheetsClient,
+            onerror: window.handleGapiError
+          });
+        } else {
+          window.handleGapiError();
+        }
+      }
+
+      // Inicializar el cliente de Google Sheets
+      function initGoogleSheetsClient() {
+        gapi.client.init({
+          apiKey: API_KEY,
+          discoveryDocs: ['https://sheets.googleapis.com/$discovery/rest?version=v4'],
+        }).then(() => {
+          console.log('API de Google Sheets inicializada correctamente');
+          // Cargar datos iniciales
+          loadSheetData();
+          // Configurar actualización automática cada 5 minutos
+          setInterval(loadSheetData, 300000);
+        }).catch(error => {
+          console.error('Error al inicializar Google Sheets API:', error);
+          // Reintentar la inicialización
+          setTimeout(loadGoogleSheetsAPI, 3000);
+        });
+      }
+
+      // Cargar datos de Google Sheets
+      function loadSheetData() {
+        // Mostrar indicador de carga
+        document.getElementById('totalFootprint').textContent = 'Cargando...';
+        
+        gapi.client.sheets.spreadsheets.values.get({
+          spreadsheetId: SPREADSHEET_ID,
+          range: 'A:Z', // Ajusta el rango según tu hoja
+        }).then(response => {
+          const data = response.result.values;
+          if (data && data.length > 0) {
+            // Convertir los datos a formato compatible
+            excelData = convertToJSON(data);
+            console.log('Datos actualizados:', excelData);
+            updateDashboard(excelData);
+            // Actualizar la tabla de búsqueda también
+            displaySearchResults(excelData);
+            
+            // Mostrar tiempo de última actualización
+            const ahora = new Date();
+            console.log('Última actualización:', ahora.toLocaleString());
+          } else {
+            console.error('No se encontraron datos en la hoja');
+            document.getElementById('totalFootprint').textContent = 'Sin datos';
+          }
+        }).catch(error => {
+          console.error('Error al cargar datos:', error);
+          document.getElementById('totalFootprint').textContent = 'Error';
+          // Reintentar después de 10 segundos en caso de error
+          setTimeout(loadSheetData, 10000);
+        });
+      }
+
+      // Convertir datos de la hoja a formato JSON
+      function convertToJSON(data) {
+        const headers = data[0];
+        return data.slice(1)
+          .filter(row => row.some(cell => cell && cell.trim() !== '')) // Filtrar filas vacías
+          .map(row => {
+            const obj = {};
+            headers.forEach((header, index) => {
+              obj[header] = row[index] || ''; // Convertir undefined a string vacío
+            });
+            return obj;
+          });
+      }
+      // Constantes para los cálculos
+      const CONSUMO_PROMEDIO = {
+        "Automóvil pequeño": 12,
+        "SUV/Crossover": 10,
+        Camioneta: 8,
+        Pickup: 7,
+        Moto: 30,
+      };
+
+      const FACTOR_EMISION = {
+        Gasolina: 2.31,
+        Diésel: 2.68,
+        Híbrido: 1.5,
+        Eléctrico: 0,
+      };
+
+      // Variable para almacenar los datos
+      let excelData = null;
+
+      // Información para los modales
+      const INFO_TEXTS = {
+        "huella-total": {
+          title: "Huella de Carbono Total",
+          content:
+            "Este indicador muestra la cantidad total de CO₂ emitida por todos los vehículos registrados en los viajes de Riohacha a la Universidad.",
+        },
+        vehiculos: {
+          title: "Total de Vehículos",
+          content:
+            "Muestra el número total de vehículos registrados que realizan el recorrido Riohacha-Universidad.",
+        },
+        distancia: {
+          title: "Promedio de Kilómetros",
+          content:
+            "Representa el promedio de kilómetros recorridos por mes por vehículo entre Riohacha y la Universidad.",
+        },
+        vehiculos: {
+          title: "Total de Vehículos",
+          content:
+            "Muestra el número total de vehículos registrados en el sistema, incluyendo todos los tipos (automóviles, motos, camionetas, etc.).",
+        },
+        distancia: {
+          title: "Distancia Total",
+          content:
+            "Representa la suma total de kilómetros recorridos por mes por todos los vehículos registrados. Este dato es importante para calcular el impacto ambiental total.",
+        },
+      };
+
+      // Inicializar la aplicación al cargar la página
+      document.addEventListener("DOMContentLoaded", () => {
+        loadGoogleSheetsAPI(); // Cargar la API de Google Sheets
+        setupNavigation();
+        setupSearch();
+        setupModal();
+        setupChartIcons();
+      });
+      // Configuración de los iconos de gráfico en las tarjetas
+      function setupChartIcons() {
+        const chartIcons = document.querySelectorAll('.chart-icon');
+        chartIcons.forEach(icon => {
+            icon.addEventListener('click', () => {
+              // Animación de presionar
+              icon.classList.add('pressed');
+              setTimeout(() => icon.classList.remove('pressed'), 250);
+
+              // Alternar la gráfica si se presiona el mismo botón
+              const container = document.getElementById('dashboardChartContainer');
+              if (container.style.display === 'block' && container.dataset.activeChart === icon.dataset.chart) {
+                container.style.display = 'none';
+                container.dataset.activeChart = '';
+                return;
+              }
+              mostrarGraficaDashboard(icon.dataset.chart);
+              container.classList.remove('animated');
+              void container.offsetWidth; // Reflow para reiniciar animación
+              container.classList.add('animated');
+              container.dataset.activeChart = icon.dataset.chart;
+            });
+        });
+      }
+
+      // Mostrar la gráfica correspondiente al ítem seleccionado
+      function mostrarGraficaDashboard(tipo) {
+          if (!excelData || excelData.length === 0) {
+              console.error('No hay datos disponibles para mostrar en la gráfica');
+              return;
+          }
+
+          const container = document.getElementById('dashboardChartContainer');
+          const chartTitle = document.getElementById('dashboardChartTitle');
+          const canvas = document.getElementById('dashboardChart');
+          container.style.display = 'block';
+
+          // Destruir gráfico anterior si existe
+          if (dashboardChart) {
+              dashboardChart.destroy();
+          }
+
+          // Procesar los datos para asegurarnos de que tengan el formato correcto
+          const processedData = excelData.map(vehicle => calcularHuellaCarbono(vehicle));
+
+          // Obtener datos
+          let labels = [];
+          let data = [];
+          let chartType = 'bar';
+          let chartLabel = '';
+          let backgroundColor = '#2ecc71';
+          let borderColor = '#27ae60';
+          const TITULOS_GRAFICAS = {
+            'huella-total': 'Huella Total',
+            'vehiculos': 'Vehículos',
+            'distancia': 'Distancia',
+            'consumo-energetico': 'Disponible',
+            'viajes-realizados': 'Viajes Realizados',
+            'tiempo-movimiento': 'Tiempo en Movimiento'
+          };
+
+          let titleText = TITULOS_GRAFICAS[tipo] || 'Sin datos';
+
+          if (!excelData || excelData.length === 0) {
+            labels = ['Sin datos'];
+            data = [0];
+            chartLabel = 'Sin datos';
+          } else {
+            if (tipo === 'huella-total') {
+              labels = excelData.map(v => v['Modelo / Marca del Vehiculo'] || '-');
+              data = excelData.map(v => calcularHuellaCarbono(v).huellaCarbono);
+              chartLabel = 'Huella de Carbono por Vehículo';
+              chartType = 'bar';
+            } else if (tipo === 'vehiculos') {
+              const tipos = {};
+              excelData.forEach(v => {
+                const tipoV = v['Tipo de Vehiculo'] || '-';
+                tipos[tipoV] = (tipos[tipoV] || 0) + 1;
+              });
+              labels = Object.keys(tipos);
+              data = Object.values(tipos);
+              chartLabel = 'Cantidad de Vehículos por Tipo';
+              chartType = 'pie';
+              backgroundColor = ['#2ecc71', '#e74c3c', '#3498db', '#f1c40f', '#9b59b6'];
+            } else if (tipo === 'distancia') {
+              labels = excelData.map(v => v['Modelo / Marca del Vehiculo'] || '-');
+              data = excelData.map(v => calcularHuellaCarbono(v).kilometrosMes);
+              chartLabel = 'Distancia Recorrida por Vehículo (km/mes)';
+              chartType = 'bar';
+            } else if (tipo === 'consumo-energetico') {
+              labels = excelData.map(v => v['Modelo / Marca del Vehiculo'] || '-');
+              data = excelData.map(() => Math.floor(Math.random() * 100));
+              chartLabel = 'Disponible';
+              chartType = 'bar';
+            } else if (tipo === 'viajes-realizados') {
+              labels = excelData.map(v => v['Modelo / Marca del Vehiculo'] || '-');
+              data = excelData.map(() => Math.floor(Math.random() * 10));
+              chartLabel = 'Viajes Realizados por Vehículo';
+              chartType = 'bar';
+            } else if (tipo === 'tiempo-movimiento') {
+              labels = excelData.map(v => v['Modelo / Marca del Vehiculo'] || '-');
+              data = excelData.map(() => Math.floor(Math.random() * 24));
+              chartLabel = 'Tiempo en Movimiento por Vehículo (horas/mes)';
+              chartType = 'bar';
+            }
+          }
+
+          // Mostrar el título de la gráfica
+          chartTitle.textContent = titleText;
+
+          dashboardChart = new Chart(canvas, {
+            type: chartType,
+            data: {
+              labels: labels,
+              datasets: [{
+                label: chartLabel,
+                data: data,
+                backgroundColor: backgroundColor,
+                borderColor: borderColor,
+                borderWidth: 1
+              }]
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: {
+                legend: { display: chartType !== 'bar' },
+                title: {
+                  display: true,
+                  text: chartLabel
+                }
+              }
+            }
+          });
+      }
+
+      // Redimensionar la gráfica al cambiar el tamaño de la ventana
+      window.addEventListener('resize', () => {
+    // No modificar el tamaño del canvas manualmente, Chart.js lo gestiona automáticamente
+      });
+
+      // Inicialización de gráficos
+      function initializeCharts() {
+        // Gráfico de Huella de Carbono por Tipo de Vehículo
+        const vehicleCtx = document
+          .getElementById("monthlyChart")
+          .getContext("2d");
+        vehicleTypeChart = new Chart(vehicleCtx, {
+          type: "bar",
+          data: {
+            labels: [],
+            datasets: [
+              {
+                label: "Huella de Carbono por Tipo de Vehículo",
+                data: [],
+                backgroundColor: "#2ecc71",
+                borderColor: "#27ae60",
+                borderWidth: 1,
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            plugins: {
+              title: {
+                display: true,
+                text: "Huella de Carbono por Tipo de Vehículo",
+              },
+            },
+          },
+        });
+
+        // Gráfico de Emisiones por Tipo de Combustible
+        const fuelCtx = document
+          .getElementById("sourcesChart")
+          .getContext("2d");
+        fuelTypeChart = new Chart(fuelCtx, {
+          type: "doughnut",
+          data: {
+            labels: [],
+            datasets: [
+              {
+                data: [],
+                backgroundColor: ["#2ecc71", "#e74c3c", "#3498db", "#f1c40f"],
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            plugins: {
+              title: {
+                display: true,
+                text: "Emisiones por Tipo de Combustible",
+              },
+            },
+          },
+        });
+      }
+
+      // Configuración del manejo de archivos Excel
+      function setupFileUpload() {
+        const fileInput = document.getElementById("excelFile");
+        fileInput.addEventListener("change", handleFileUpload);
+      }
+
+      // Manejo de la carga de archivos Excel
+      async function handleFileUpload(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        // Verificar el tipo de archivo
+        const fileType = file.name.split(".").pop().toLowerCase();
+        if (fileType !== "xlsx" && fileType !== "xls") {
+          alert("Por favor, selecciona un archivo Excel válido (.xlsx o .xls)");
+          return;
+        }
+
+        try {
+          const data = await readExcelFile(file);
+          if (data && data.length > 0) {
+            console.log("Datos cargados:", data); // Para depuración
+            updateDashboard(data);
+          } else {
+            throw new Error("No se encontraron datos en el archivo");
+          }
+        } catch (error) {
+          console.error("Error al procesar el archivo:", error);
+          alert(
+            "Error al procesar el archivo Excel. Asegúrate de que:\n" +
+              "1. El archivo no esté dañado\n" +
+              "2. Contenga las columnas correctas\n" +
+              "3. La hoja de cálculo tenga datos"
+          );
+        }
+      }
+
+      // Lectura del archivo Excel
+      function readExcelFile(file) {
+        return new Promise((resolve, reject) => {
+          const reader = new FileReader();
+
+          reader.onload = function (e) {
+            try {
+              const data = e.target.result;
+              const workbook = XLSX.read(data, { type: "binary" });
+              const firstSheetName = workbook.SheetNames[0];
+              const worksheet = workbook.Sheets[firstSheetName];
+              const jsonData = XLSX.utils.sheet_to_json(worksheet);
+              resolve(jsonData);
+            } catch (error) {
+              reject(error);
+            }
+          };
+
+          reader.onerror = reject;
+          reader.readAsBinaryString(file);
+        });
+      }
+
+      // Actualización del dashboard con los datos
+      function updateDashboard(data) {
+        // Procesar datos del Excel
+        const processedData = procesarDatosExcel(data);
+
+        // Actualizar totales
+        updateTotalFootprint(processedData);
+        updateVehicleStats(processedData);
+        updateEnvironmentalAwareness(processedData);
+
+        // Actualizar tabla del dashboard
+        updateDashboardTable(processedData);
+      }
+
+      // Función para actualizar la tabla del dashboard
+      function updateDashboardTable(data) {
+        const tableBody = document.getElementById("dashboardTableBody");
+        tableBody.innerHTML = "";
+
+        if (data.length === 0) {
+          tableBody.innerHTML =
+            '<tr><td colspan="5">No hay datos disponibles</td></tr>';
+          return;
+        }
+
+        data.forEach((vehicle) => {
+          const row = document.createElement("tr");
+          row.innerHTML = `
+            <td>${vehicle.marca || ""}</td>
+            <td>${vehicle.tipoVehiculo || ""}</td>
+            <td>${vehicle.tipoCombustible || ""}</td>
+            <td>${vehicle.kilometrosMes} km</td>
+            <td>${vehicle.huellaCarbono.toFixed(2)} kg CO₂</td>
+        `;
+          tableBody.appendChild(row);
+        });
+      }
+
+      function updateVehicleStats(data) {
+        const totalVehiculos = data.length;
+        
+        // Calcular el promedio de kilómetros
+        const totalKilometros = data.reduce(
+          (sum, vehicle) => sum + vehicle.kilometrosMes,
+          0
+        );
+        const promedioKilometros = totalVehiculos > 0 ? totalKilometros / totalVehiculos : 0;
+        
+        const totalLitros = data.reduce(
+          (sum, vehicle) => sum + vehicle.litrosMes,
+          0
+        );
+
+        document.getElementById("totalFootprint").textContent = data
+          .reduce((sum, vehicle) => sum + vehicle.huellaCarbono, 0)
+          .toFixed(2);
+        document.getElementById(
+          "reduction"
+        ).textContent = `${totalVehiculos} vehículos`;
+        document.getElementById(
+          "sources"
+        ).textContent = `${promedioKilometros.toFixed(1)} km/mes`;
+      }
+
+      function updateEnvironmentalAwareness(data) {
+        const conCharlas = data.filter(
+          (v) => v.charlaAmbiental === "Sí"
+        ).length;
+        const porcentajeCharlas = ((conCharlas / data.length) * 100).toFixed(1);
+        // Aquí podrías agregar un elemento en el HTML para mostrar este porcentaje
+      }
+
+      function updateVehicleTypeChart(data) {
+        const vehicleTypes = {};
+        data.forEach((vehicle) => {
+          if (!vehicleTypes[vehicle["Tipo de vehículo"]]) {
+            vehicleTypes[vehicle["Tipo de vehículo"]] = 0;
+          }
+          vehicleTypes[vehicle["Tipo de vehículo"]] += vehicle.huellaCarbono;
+        });
+
+        vehicleTypeChart.data.labels = Object.keys(vehicleTypes);
+        vehicleTypeChart.data.datasets[0].data = Object.values(vehicleTypes);
+        vehicleTypeChart.update();
+      }
+
+      function updateFuelTypeChart(data) {
+        const fuelTypes = {};
+        data.forEach((vehicle) => {
+          if (!fuelTypes[vehicle["Tipo de combustible"]]) {
+            fuelTypes[vehicle["Tipo de combustible"]] = 0;
+          }
+          fuelTypes[vehicle["Tipo de combustible"]] += vehicle.huellaCarbono;
+        });
+
+        fuelTypeChart.data.labels = Object.keys(fuelTypes);
+        fuelTypeChart.data.datasets[0].data = Object.values(fuelTypes);
+        fuelTypeChart.update();
+      }
+
+      // Funciones de actualización de datos
+      function updateTotalFootprint(data) {
+        const total = data.reduce(
+          (sum, row) => sum + (parseFloat(row.huella) || 0),
+          0
+        );
+        document.getElementById("totalFootprint").textContent =
+          total.toFixed(2);
+      }
+
+      function updateReduction(data) {
+        // Simular cálculo de reducción
+        document.getElementById("reduction").textContent = "-15%";
+      }
+
+      function updateSourcesCount(data) {
+        const uniqueSources = new Set(data.map((row) => row.fuente)).size;
+        document.getElementById("sources").textContent = uniqueSources;
+      }
+
+      function updateMonthlyChart(data) {
+        // Procesar datos mensuales
+        const monthlyData = processMonthlyData(data);
+        monthlyChart.data.labels = monthlyData.labels;
+        monthlyChart.data.datasets[0].data = monthlyData.values;
+        monthlyChart.update();
+      }
+
+      function updateSourcesChart(data) {
+        // Procesar datos por fuente
+        const sourcesData = processSourcesData(data);
+        sourcesChart.data.labels = sourcesData.labels;
+        sourcesChart.data.datasets[0].data = sourcesData.values;
+        sourcesChart.update();
+      }
+
+      // Funciones auxiliares para procesar datos
+      function processMonthlyData(data) {
+        // Aquí deberías implementar la lógica para procesar los datos mensuales
+        // Este es un ejemplo simplificado
+        return {
+          labels: ["Ene", "Feb", "Mar", "Abr", "May", "Jun"],
+          values: [10, 15, 12, 8, 9, 11],
+        };
+      }
+
+      function calcularHuellaCarbono(vehiculo) {
+        // Obtener el consumo promedio según el tipo de vehículo
+        const consumoKmL = CONSUMO_PROMEDIO[vehiculo["Tipo de Vehiculo"]] || 10;
+
+        // Calcular litros consumidos por mes
+        // Extraer solo el número de la respuesta de kilómetros
+        const kmText =
+          vehiculo[
+            "¿Cuántos km recorre por mes? (Ingresen un solo valor por ejemplo 100km)"
+          ] || "0";
+        const kilometrosMes = parseFloat(kmText.replace(/[^0-9.]/g, "")) || 0;
+        const litrosMes = kilometrosMes / consumoKmL;
+
+        // Calcular emisiones según el tipo de combustible
+        const factorEmision =
+          FACTOR_EMISION[vehiculo["¿Que tipo de combustible usa el carro?"]] ||
+          0;
+        const huellaCarbono = litrosMes * factorEmision;
+
+        return {
+          huellaCarbono,
+          litrosMes,
+          kilometrosMes,
+          marca: vehiculo["Modelo / Marca del Vehiculo"],
+          tipoVehiculo: vehiculo["Tipo de Vehiculo"],
+          tipoCombustible: vehiculo["¿Que tipo de combustible usa el carro?"],
+          charlaAmbiental:
+            vehiculo[
+              "¿Han tenido charlas ambientales sobre la huella de carbono?"
+            ],
+        };
+      }
+
+      function procesarDatosExcel(data) {
+        return data.map((vehiculo) => {
+          return {
+            ...vehiculo,
+            ...calcularHuellaCarbono(vehiculo)
+          };
+        });
+      }
+
+      function processSourcesData(data) {
+        const vehiculosPorTipo = {};
+        data.forEach((vehiculo) => {
+          const tipo = vehiculo["Tipo de vehículo"];
+          if (!vehiculosPorTipo[tipo]) {
+            vehiculosPorTipo[tipo] = 0;
+          }
+          vehiculosPorTipo[tipo] += vehiculo.huellaCarbono;
+        });
+
+        return {
+          labels: Object.keys(vehiculosPorTipo),
+          values: Object.values(vehiculosPorTipo),
+        };
+      }
+
+      // Configuración de la navegación
+      function setupNavigation() {
+        const menuOptions = document.querySelectorAll(".menu-option");
+        const sections = document.querySelectorAll(".section");
+
+        menuOptions.forEach((option) => {
+          option.addEventListener("click", () => {
+            // Actualizar estados activos
+            menuOptions.forEach((opt) => opt.classList.remove("active"));
+            option.classList.add("active");
+
+            // Mostrar la sección correspondiente
+            const targetSection = option.dataset.section;
+            sections.forEach((section) => {
+              if (section.id === `${targetSection}-section`) {
+                section.classList.remove("hidden");
+              } else {
+                section.classList.add("hidden");
+              }
+            });
+          });
+        });
+      }
+
+      // Configuración del modal
+      function setupModal() {
+        const modal = document.getElementById("infoModal");
+        const closeBtn = document.querySelector(".close-modal");
+        const infoIcons = document.querySelectorAll(".info-icon");
+
+        infoIcons.forEach((icon) => {
+          const card = icon.closest(".card");
+          const cardType = card
+            .querySelector("h3")
+            .textContent.toLowerCase()
+            .replace(" ", "-");
+
+          icon.addEventListener("click", () => {
+            const info = INFO_TEXTS[cardType] || {title: cardType, content: 'Sin información'};
+            document.getElementById("modalTitle").textContent = info.title;
+            document.getElementById("modalContent").textContent = info.content;
+            modal.style.display = "block";
+            const modalContent = modal.querySelector('.modal-content');
+            modalContent.classList.remove('animated');
+            void modalContent.offsetWidth;
+            modalContent.classList.add('animated');
+          });
+        });
+
+        closeBtn.addEventListener("click", () => {
+          modal.style.display = "none";
+        });
+
+        window.addEventListener("click", (e) => {
+          if (e.target === modal) {
+            modal.style.display = "none";
+          }
+        });
+      }
+
+      // Configuración de la búsqueda
+      function setupSearch() {
+        const searchInput = document.getElementById("vehicleSearch");
+        const searchButton = document.querySelector(".search-button");
+        const filterSelect = document.createElement("select");
+        filterSelect.id = "vehicleTypeFilter";
+        filterSelect.innerHTML = `
+        <option value="">Todos los tipos</option>
+        <option value="Automóvil pequeño">Automóvil pequeño</option>
+        <option value="Camioneta">Camioneta</option>
+        <option value="Moto">Moto</option>
+    `;
+
+        searchInput.parentElement.insertBefore(filterSelect, searchButton);
+
+        // Mostrar todos los vehículos cuando se cargan los datos
+        if (excelData) {
+          displaySearchResults(excelData);
+        }
+
+        searchButton.addEventListener("click", () => performSearch());
+        searchInput.addEventListener("keypress", (e) => {
+          if (e.key === "Enter") {
+            performSearch();
+          }
+        });
+
+        // Búsqueda en tiempo real mientras se escribe o se cambia el filtro
+        searchInput.addEventListener("input", () => performSearch());
+        filterSelect.addEventListener("change", () => performSearch());
+      }
+
+      // Realizar búsqueda
+      function performSearch() {
+        const searchInput = document.getElementById("vehicleSearch");
+        const filterSelect = document.getElementById("vehicleTypeFilter");
+        const searchTerm = searchInput.value.toLowerCase();
+        const filterType = filterSelect.value;
+
+        if (!excelData) {
+          alert("Por favor, carga primero el archivo de datos.");
+          return;
+        }
+
+        let results = excelData;
+
+        // Aplicar filtro por tipo de vehículo
+        if (filterType) {
+          results = results.filter(
+            (row) => row["Tipo de Vehiculo"] === filterType
+          );
+        }
+
+        // Si hay término de búsqueda, filtrar los resultados
+        if (searchTerm.trim() !== "") {
+          results = results.filter((row) => {
+            const searchableFields = [
+              row["Modelo / Marca del Vehiculo"],
+              row["Tipo de Vehiculo"],
+              row["¿Que tipo de combustible usa el carro?"],
+            ].map((field) => String(field || "").toLowerCase());
+
+            return searchableFields.some((field) => field.includes(searchTerm));
+          });
+        }
+
+        displaySearchResults(results);
+      }
+
+      // Mostrar resultados de búsqueda
+      function displaySearchResults(results) {
+        const tableBody = document.getElementById("vehiclesTableBody");
+        tableBody.innerHTML = "";
+
+        if (results.length === 0) {
+          tableBody.innerHTML =
+            '<tr><td colspan="4">No se encontraron resultados</td></tr>';
+          return;
+        }
+
+        // Procesar los datos para mostrar la huella de carbono
+        const processedResults = results.map((vehicle) =>
+          calcularHuellaCarbono(vehicle)
+        );
+
+        processedResults.forEach((vehicle) => {
+          const row = document.createElement("tr");
+          row.innerHTML = `
+            <td>${vehicle.marca || "-"}</td>
+            <td>${vehicle.tipoVehiculo || "-"}</td>
+            <td>${vehicle.tipoCombustible || "-"}</td>
+            <td>${vehicle.kilometrosMes} km</td>
+            <td>${vehicle.huellaCarbono.toFixed(2)} kg CO₂</td>
+        `;
+          tableBody.appendChild(row);
+        });
+      }
+
+      // Actualizar la función de lectura de Excel para guardar los datos
+      function readExcelFile(file) {
+        return new Promise((resolve, reject) => {
+          const reader = new FileReader();
+
+          reader.onload = function (e) {
+            try {
+              const data = new Uint8Array(e.target.result);
+              const workbook = XLSX.read(data, { type: "array" });
+
+              // Verificar si hay hojas de cálculo
+              if (workbook.SheetNames.length === 0) {
+                throw new Error(
+                  "El archivo Excel no contiene hojas de cálculo"
+                );
+              }
+
+              const firstSheetName = workbook.SheetNames[0];
+              const worksheet = workbook.Sheets[firstSheetName];
+
+              // Convertir a JSON con opciones específicas
+              excelData = XLSX.utils.sheet_to_json(worksheet, {
+                raw: false, // Mantener el formato de texto
+                defval: "", // Valor por defecto para celdas vacías
+              });
+
+              // Verificar si se obtuvieron datos
+              if (!excelData || excelData.length === 0) {
+                throw new Error(
+                  "No se encontraron datos en la hoja de cálculo"
+                );
+              }
+
+              // Verificar que los campos necesarios estén presentes
+              const requiredFields = [
+                "Modelo / Marca del Vehiculo",
+                "Tipo de Vehiculo",
+                "¿Que tipo de combustible usa el carro?",
+                "¿Cuántos km recorre por mes? (Ingresen un solo valor por ejemplo 100km)",
+                "¿Han tenido charlas ambientales sobre la huella de carbono?",
+              ];
+
+              const missingFields = requiredFields.filter(
+                (field) => !Object.keys(excelData[0]).includes(field)
+              );
+
+              if (missingFields.length > 0) {
+                throw new Error(
+                  "Faltan columnas requeridas: " + missingFields.join(", ")
+                );
+              }
+
+              console.log("Datos cargados exitosamente:", excelData); // Para depuración
+
+              // Mostrar todos los datos inmediatamente después de cargar
+              displaySearchResults(excelData);
+
+              resolve(excelData);
+            } catch (error) {
+              console.error("Error en la lectura del archivo:", error);
+              reject(error);
+            }
+          };
+
+          reader.onerror = (error) => {
+            console.error("Error en FileReader:", error);
+            reject(error);
+          };
+
+          reader.readAsArrayBuffer(file); // Cambiar a readAsArrayBuffer para mejor compatibilidad
+        });
+      }
+
+      
+    </script>
+  </body>
+</html>
